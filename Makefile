@@ -5,6 +5,7 @@
 WHEREAMI = $(shell pwd)
 WHOAMI = $(shell basename $(WHEREAMI))
 WHATAMI = $(shell echo $(WHOAMI) | awk -F '-' '{print $$3}')
+WHATAMI_REALLY = $(shell basename `pwd` | sed 's/whosonfirst-data-//')
 
 YMD = $(shell date "+%Y%m%d")
 
@@ -37,8 +38,13 @@ endif
 
 concordances:
 	wof-concordances-write -processes 100 -source ./data > meta/wof-concordances-tmp.csv
+ifeq ($(WHATAMI),)
 	mv meta/wof-concordances-tmp.csv meta/wof-concordances-$(YMD).csv
 	cp meta/wof-concordances-$(YMD).csv meta/wof-concordances-latest.csv
+else
+	mv meta/wof-concordances-tmp.csv meta/wof-$(WHATAMI_REALLY)-concordances-$(YMD).csv
+	cp meta/wof-$(WHATAMI_REALLY)-concordances-$(YMD).csv meta/wof-$(WHATAMI_REALLY)-concordances-latest.csv
+endif
 
 count:
 	find ./data -name '*.geojson' -print | wc -l
@@ -61,6 +67,9 @@ ifeq ($(shell grep '*.geojson text eol=lf' .gitattributes | wc -l), 0)
 else
 	@echo "Git linefeed hoohah already set"
 endif
+
+gitlfs-track-meta:
+	git-lfs track meta/*-latest.csv
 
 # https://internetarchive.readthedocs.org/en/latest/cli.html#upload
 # https://internetarchive.readthedocs.org/en/latest/quickstart.html#configuring
